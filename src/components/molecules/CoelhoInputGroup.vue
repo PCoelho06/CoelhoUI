@@ -1,9 +1,12 @@
 <template>
   <div class="space-y-1">
     <!-- Label -->
-    <CoelhoText v-if="label" as="label" :for="id" class="block mb-1" weight="medium">
-      {{ label }}
-    </CoelhoText>
+    <label v-if="label" :for="inputId" class="block mb-2">
+      <CoelhoText weight="medium" size="sm">
+        {{ label }}
+      </CoelhoText>
+      <span v-if="required" class="text-red-500">*</span>
+    </label>
 
     <!-- Input Group Container -->
     <div class="relative flex">
@@ -15,12 +18,11 @@
         <slot name="prefix" />
       </div>
 
-      <!-- Input -->
-      <CoelhoInput :id="id" :prefix="prefix || $slots.prefix ? true : false"
+      <!-- Dynamic Form Component -->
+      <component :is="componentType" :id="inputId" :prefix="prefix || $slots.prefix ? true : false"
         :suffix="suffix || $slots.suffix || action ? true : false" :type="type" v-model="inputValue" v-bind="$attrs"
-        :disabled="disabled" :placeholder="placeholder" :class="[
-          'flex-1'
-        ]" :error="!!error" @blur="handleBlur" />
+        :disabled="disabled" :placeholder="placeholder" :options="options" :multiple="multiple" :searchable="searchable"
+        class="flex-1" :error="!!error" @blur="handleBlur" />
 
       <!-- Suffix -->
       <div v-if="suffix || $slots.suffix" class="flex items-center px-3 border border-l-0 border-stroke bg-whitten"
@@ -55,10 +57,16 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { Component } from 'vue';
-import { CoelhoInput, CoelhoButton, CoelhoIcon, CoelhoText } from '../'
+import { CoelhoInput, CoelhoSelect, CoelhoButton, CoelhoIcon, CoelhoText } from '../';
+
+interface SelectOption {
+  label: string;
+  value: string;
+}
 
 interface Props {
-  modelValue: string;
+  modelValue: string | string[];
+  required?: boolean;
   label?: string;
   prefix?: Component;
   suffix?: Component;
@@ -71,20 +79,36 @@ interface Props {
   actionLabel?: string;
   actionIcon?: Component;
   actionVariant?: 'primary' | 'secondary' | 'danger';
-  id?: string;
+  component?: 'input' | 'select';
+  options?: SelectOption[];
+  multiple?: boolean;
+  searchable?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   actionVariant: 'primary',
-  id: `input-${Math.random().toString(36).substr(2, 9)}`,
+  component: 'input',
+  multiple: false,
+  searchable: false,
+  required: false,
 });
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string): void;
+  (e: 'update:modelValue', value: string | string[]): void;
   (e: 'blur', event: FocusEvent): void;
   (e: 'action'): void;
 }>();
+
+const inputId = computed(() => `input-${Math.random().toString(36).substr(2, 9)}`);
+
+const componentType = computed(() => {
+  const components = {
+    'input': CoelhoInput,
+    'select': CoelhoSelect,
+  };
+  return components[props.component];
+});
 
 const inputValue = computed({
   get: () => props.modelValue,

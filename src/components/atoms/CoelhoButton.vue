@@ -1,12 +1,16 @@
 <template>
-  <button :type="type || 'button'" :disabled="disabled || loading" :class="[
+  <button :type="type" :disabled="disabled || loading" :class="[
     'inline-flex items-center justify-center rounded-md font-medium transition-colors',
     {
-      'bg-primary text-white hover:bg-primary': variant === 'primary',
-      'bg-whitten text-dark hover:bg-stroke': variant === 'secondary',
-      'border border-stroke bg-transparent text-dark hover:bg-whitten': variant === 'tertiary',
-      'bg-red-600 text-white hover:bg-red-700': variant === 'danger',
-      'bg-green-600 text-white hover:bg-green-700': variant === 'success',
+      'bg-primary text-white hover:bg-primary': variant === 'primary' && !outlined,
+      'bg-whitten text-primary hover:bg-stroke': variant === 'secondary' && !outlined,
+      'bg-red-600 text-white hover:bg-red-700': variant === 'danger' && !outlined,
+      'bg-green-600 text-white hover:bg-green-700': variant === 'success' && !outlined,
+      'bg-transparent border': outlined,
+      'border-primary text-primary hover:text-primary-80 hover:border-primary-80': variant === 'primary' && outlined,
+      'border-whitten text-whitten hover:text-stroke hover:border-stroke': variant === 'secondary' && outlined,
+      'border-red-600 text-red-600 hover:text-red-700 hover:border-red-700': variant === 'danger' && outlined,
+      'border-green-600 text-green-600 hover:text-green-700 hover:border-green-700': variant === 'success' && outlined,
       'cursor-pointer': !disabled && !loading,
       'opacity-50 cursor-not-allowed': disabled,
       'cursor-wait': loading,
@@ -28,13 +32,23 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  variant?: 'primary' | 'secondary' | 'tertiary' | 'danger' | 'success';
+interface Props {
+  variant?: 'primary' | 'secondary' | 'danger' | 'success';
+  outlined?: boolean,
   size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;
   loading?: boolean;
   type?: 'button' | 'submit' | 'reset';
-}>();
+}
+
+withDefaults(defineProps<Props>(), {
+  variant: 'primary',
+  size: 'md',
+  disabled: false,
+  outlined: false,
+  loading: false,
+  type: 'button'
+});
 
 const emit = defineEmits<{
   (e: 'click', event: MouseEvent): void;

@@ -8,10 +8,10 @@
     <!-- Select Container -->
     <div class="relative">
       <!-- Search Input (for searchable variant) -->
-      <input v-if="searchable" ref="searchInput" type="text" v-model="searchQuery"
+      <input v-if="searchable" ref="searchInput" type="text" v-model="displayValue"
         class="w-full rounded-md border border-stroke bg-white px-3 py-2 pr-10 text-sm focus:border-primary focus:outline-none"
-        :class="{ 'opacity-50 cursor-not-allowed': disabled }" :placeholder="placeholder" @focus="handleFocus"
-        @blur="handleBlur" :disabled="disabled" />
+        :class="{ 'opacity-50 cursor-not-allowed': disabled }" :placeholder="placeholder" @focus="handleSearchFocus"
+        @input="handleSearchInput" @blur="handleBlur" :disabled="disabled" />
 
       <!-- Selected Value Display (for non-searchable variant) -->
       <div v-else ref="selectTrigger"
@@ -107,6 +107,7 @@ const searchQuery = ref('');
 const selectTrigger = ref<HTMLElement | null>(null);
 const searchInput = ref<HTMLElement | null>(null);
 const dropdown = ref<HTMLElement | null>(null);
+const displayValue = ref('');
 
 // Computed
 const filteredOptions = computed(() => {
@@ -155,6 +156,16 @@ const handleBlur = (event: FocusEvent) => {
   }, 200);
 };
 
+const handleSearchFocus = () => {
+  displayValue.value = searchQuery.value;
+  handleFocus();
+};
+
+const handleSearchInput = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  searchQuery.value = input.value;
+};
+
 const selectOption = (option: SelectOption) => {
   if (props.multiple) {
     const values = Array.isArray(props.modelValue) ? [...props.modelValue] : [];
@@ -167,10 +178,11 @@ const selectOption = (option: SelectOption) => {
     emit('update:modelValue', values);
   } else {
     emit('update:modelValue', option.value);
+    if (props.searchable) {
+      displayValue.value = option.label;
+      searchQuery.value = '';
+    }
     isOpen.value = false;
-  }
-  if (!props.multiple) {
-    searchQuery.value = '';
   }
 };
 
@@ -220,4 +232,12 @@ watch(isOpen, (newValue) => {
     searchQuery.value = '';
   }
 });
+
+// Ajout d'un watch pour mettre à jour displayValue
+watch(() => props.modelValue, (newValue) => {
+  if (props.searchable && !props.multiple && newValue) {
+    const option = props.options.find(opt => opt.value === newValue);
+    displayValue.value = option ? option.label : '';
+  }
+}, { immediate: true });
 </script>

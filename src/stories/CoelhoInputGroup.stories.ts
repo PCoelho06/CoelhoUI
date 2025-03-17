@@ -135,6 +135,7 @@ export const WithAction: Story = {
 export const WithValidation: Story = {
   args: {
     modelValue: '',
+    required: true,
     label: 'Username',
     placeholder: 'Enter your username',
     error: 'This field is required',
